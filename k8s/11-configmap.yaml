@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nemo-backend-config
+  namespace: nemo
+data:
+  # Shared MySQL InnoDB Cluster (Oracle MySQL Operator) in `mysql-db` ns.
+  # Connect through the router so reads/writes auto-route and failover works.
+  # 6446 = RW split (primary), 6447 = RO replicas.
+  MYSQL_SERVER: "jfs-mysql-router.mysql-db.svc.cluster.local"
+  MYSQL_PORT: "6446"
+  MYSQL_DB: "szlab_appoint"
+  ALGORITHM: "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES: "1440"
+  BACKEND_CORS_ORIGINS: '["http://nemo.local","http://localhost:3000"]'
+  # Staff (former security-server) endpoints are now in-process at
+  # /security-api/api/*. These two switches stay so ops can disable the
+  # whole integration in an emergency — no remote URL is needed anymore.
+  SECURITY_SERVER_ENABLED: "true"
+  SECURITY_SERVER_PROJECT_SYNC_ENABLED: "true"
+  VERIFICATION_CODE_EXPIRE_MINUTES: "10"
+  VERIFICATION_CODE_RETURN_IN_RESPONSE: "false"
+  REQUIRE_VERIFICATION_FOR_REGISTER: "false"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nemo-ui-nginx
+  namespace: nemo
+data:
+  default.conf: |
+    server {
+      listen 80;
+      server_name _;
+      client_max_body_size 350m;
+
+      root /usr/share/nginx/html;
+      index index.html;
+
+      # Single SPA shell (vue-router handles /security/* on the client).
+      location = /index.html {
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+        add_header Expires "0";
+      }
+
+      # nemo backend (FastAPI).
+      location /api/ {
+        proxy_pass http://nemo-backend:8000;
+        proxy_http_version 1.1;
+        proxy_connect_timeout 30s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+        proxy_request_buffering off;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+
+      # User-uploaded media (FastAPI StaticFiles).
+      location /media/ {
+        proxy_pass http://nemo-backend:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $http_host;
+      }
+
+      # Staff endpoints (ported security-server, mounted at /security-api/api).
+      location /security-api/ {
+        proxy_pass http://nemo-backend:8000;
+        proxy_http_version 1.1;
+        proxy_connect_timeout 30s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+        proxy_request_buffering off;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+
+      # Long-cache static assets.
+      location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+      }
+
+      # SPA fallback — vue-router serves / and /security/* from one dist.
+      location / {
+        try_files $uri $uri/ /index.html;
+      }
+    }

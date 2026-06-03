@@ -1,0 +1,93 @@
+# One-shot Job that creates the application database and dedicated app
+# account on the shared MySQL InnoDB Cluster. Idempotent — re-applying
+# is safe (CREATE / ALTER USER are both guarded).
+#
+# This Job ONLY creates the schema + grants. All tables (including the
+# `staff_*` tables ported from security-server) are created by the
+# backend itself on first start via `Base.metadata.create_all`.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nemo-db-init-sql
+  namespace: nemo
+data:
+  init.sql: |
+    CREATE DATABASE IF NOT EXISTS `szlab_appoint`
+      DEFAULT CHARACTER SET utf8mb4
+      COLLATE utf8mb4_unicode_ci;
+
+    CREATE USER IF NOT EXISTS 'nemo'@'%' IDENTIFIED BY '__NEMO_DB_PASSWORD__';
+    ALTER USER 'nemo'@'%' IDENTIFIED BY '__NEMO_DB_PASSWORD__';
+    GRANT ALL PRIVILEGES ON `szlab_appoint`.* TO 'nemo'@'%';
+
+    -- Optional cleanup: drop the legacy `security-server` database and
+    -- `secsrv` account if they still exist from older deployments. These
+    -- are no longer used now that the staff tables live in `szlab_appoint`
+    -- as `staff_*`. Comment these out if you want to keep the old data.
+    DROP USER IF EXISTS 'secsrv'@'%';
+    -- DROP DATABASE IF EXISTS `security-server`;
+
+    FLUSH PRIVILEGES;
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nemo-db-init
+  namespace: nemo
+spec:
+  backoffLimit: 5
+  ttlSecondsAfterFinished: 86400
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mysql-init
+          image: mysql:8.4
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MYSQL_ROOT_USER
+              valueFrom:
+                secretKeyRef: { name: nemo-db-init, key: MYSQL_ROOT_USER }
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: nemo-db-init, key: MYSQL_ROOT_PASSWORD }
+            - name: NEMO_DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: nemo-db-init, key: NEMO_DB_PASSWORD }
+            - name: MYSQL_HOST
+              value: jfs-mysql-router.mysql-db.svc.cluster.local
+            - name: MYSQL_PORT
+              value: "6446"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Waiting for MySQL router at $MYSQL_HOST:$MYSQL_PORT ..."
+              for i in $(seq 1 60); do
+                if mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" \
+                         -u "$MYSQL_ROOT_USER" -p"$MYSQL_ROOT_PASSWORD" \
+                         -e "SELECT 1" >/dev/null 2>&1; then
+                  echo "MySQL reachable."
+                  break
+                fi
+                echo "  retry $i ..."
+                sleep 2
+              done
+              sed -e "s|__NEMO_DB_PASSWORD__|$NEMO_DB_PASSWORD|g" \
+                  /sql/init.sql > /tmp/init.sql
+              mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" \
+                    -u "$MYSQL_ROOT_USER" -p"$MYSQL_ROOT_PASSWORD" \
+                    < /tmp/init.sql
+              echo "Database init complete. (Application tables are created on first backend start.)"
+          volumeMounts:
+            - name: sql
+              mountPath: /sql
+              readOnly: true
+      volumes:
+        - name: sql
+          configMap:
+            name: nemo-db-init-sql
+            items:
+              - key: init.sql
+                path: init.sql

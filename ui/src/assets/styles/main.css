@@ -1,0 +1,155 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+        sans-serif;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Element Plus 覆盖样式 */
+.el-main {
+    padding: 20px;
+    background-color: #f5f7fa;
+}
+
+.el-card {
+    margin-bottom: 20px;
+}
+
+/* 工具类 */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mt-10 {
+    margin-top: 10px;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+.mb-10 {
+    margin-bottom: 10px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+.ml-10 {
+    margin-left: 10px;
+}
+
+.mr-10 {
+    margin-right: 10px;
+}
+
+.p-10 {
+    padding: 10px;
+}
+
+.p-20 {
+    padding: 20px;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+/* 状态标签 */
+.status-tag {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.status-success {
+    background-color: #f0f9ff;
+    color: #67c23a;
+}
+
+.status-warning {
+    background-color: #fef0f0;
+    color: #e6a23c;
+}
+
+.status-danger {
+    background-color: #fef0f0;
+    color: #f56c6c;
+}
+
+.status-info {
+    background-color: #f4f4f5;
+    color: #909399;
+}
+
+/* 动画 */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+.slide-fade-enter-active {
+    transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+    transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+    transform: translateX(20px);
+    opacity: 0;
+}

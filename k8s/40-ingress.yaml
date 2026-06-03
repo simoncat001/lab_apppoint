@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nemo
+  namespace: nemo
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "350m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+spec:
+  ingressClassName: nginx
+  rules:
+    # Single host now serves both UIs:
+    #   /                → nemo SPA
+    #   /security/       → staff SPA (built into the same nemo-ui image)
+    #   /api/*           → nemo-backend
+    #   /security-api/*  → nemo-backend (staff API namespace)
+    # The nemo-ui pod's nginx fans these out internally.
+    - host: nemo.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nemo-ui
+                port:
+                  number: 80
+  # tls:
+  #   - hosts: ["nemo.local"]
+  #     secretName: nemo-tls

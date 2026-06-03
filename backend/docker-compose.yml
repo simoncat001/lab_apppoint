@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - MYSQL_SERVER=mysql
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=123456
+      - MYSQL_DB=szlab_appoint
+      - MYSQL_PORT=3306
+    depends_on:
+      - mysql
+    volumes:
+      - ./app:/app/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      - MYSQL_DATABASE=szlab_appoint
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

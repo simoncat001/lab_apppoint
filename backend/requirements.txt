@@ -1,0 +1,34 @@
+# FastAPI Backend for NEMO
+# Laboratory Logistics Management System
+
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+sqlalchemy==2.0.36
+greenlet>=3.0       # required by sqlalchemy.ext.asyncio
+aiomysql==0.2.0
+pymysql==1.1.0
+pydantic==2.10.3
+pydantic-settings==2.6.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.18
+aiofiles==24.1.0
+httpx==0.28.1
+alembic==1.14.0
+python-dateutil==2.9.0
+email-validator==2.2.0
+python-dotenv>=0.21.0
+requests>=2.31.0
+
+# Database
+# MySQL connectors: aiomysql for async, pymysql as fallback
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-cov==6.0.0
+
+# Development
+black==24.10.0
+flake8==7.1.1
+mypy==1.13.0

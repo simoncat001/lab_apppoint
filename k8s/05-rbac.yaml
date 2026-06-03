@@ -1,0 +1,30 @@
+# Lets the backend init-container `kubectl wait` for the DB init Job.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nemo-backend
+  namespace: nemo
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: nemo-backend-job-watcher
+  namespace: nemo
+rules:
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: nemo-backend-job-watcher
+  namespace: nemo
+subjects:
+  - kind: ServiceAccount
+    name: nemo-backend
+    namespace: nemo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: nemo-backend-job-watcher

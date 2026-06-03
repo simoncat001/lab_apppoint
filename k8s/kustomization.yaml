@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: nemo
+resources:
+  - 00-namespace.yaml
+  - 05-rbac.yaml
+  - 10-secrets.yaml
+  - 11-configmap.yaml
+  - 20-db-init.yaml
+  - 30-backend.yaml
+  - 32-ui.yaml
+  - 40-ingress.yaml
+  # Notes:
+  #   - 31-security-server.yaml & 33-security-server-ui.yaml are gone:
+  #     the legacy Spring service is ported into nemo-backend (mounted at
+  #     /security-api/api/*), and its UI dist is now bundled into nemo-ui
+  #     under /security/.
+  #   - MySQL is consumed from the shared `mysql-db/jfs-mysql` cluster.
+  #   - JuiceFS uses the cluster-wide `juicefs-sc` StorageClass
+  #     (deployed in the `jfs-rustfs` namespace).

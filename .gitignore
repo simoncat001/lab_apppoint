@@ -1,0 +1,68 @@
+# macOS / editor
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+backend/.env
+ui/.env.*
+k8s/*secret*.yaml
+k8s/*secrets*.yaml
+k8s/10-secrets.yaml
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Node / frontend
+node_modules/
+ui/node_modules/
+ui/dist/
+dist/
+.vite/
+coverage/
+
+# Build artifacts and archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+dist-images/
+
+# Runtime uploads / generated files
+backend/media/
+media/
+db-dumps/
+local/
+backend/*.sql
+
+# Logs
+*.log
+backend-error
+backend/error
+backend/*.err
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
